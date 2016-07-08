@@ -1,0 +1,43 @@
+data:
+  image: maxexcloo/data
+  volumes:
+    - ./app:/data
+oracle:
+  image: sath89/oracle-xe-11g
+  ports:
+    - "1521:1521"
+  volumes:
+    - ./docker-data/oracle:/u01/app/oracle
+web:
+  build: ./docker-images/nginx-php-oci8
+  volumes_from:
+    - data
+  volumes:
+    - ./docker-data/tnsnames.ora:/etc/tnsnames.ora
+  ports:
+    - "8000:80"
+  env_file:
+    - ./common.env
+    - ./web.env
+  links:
+    - oracle
+php:
+  build: ./docker-images/php-oci8-cli
+  volumes_from:
+    - web
+  env_file:
+    - ./common.env
+  links:
+    - oracle
+sqldeveloper:
+  image: pperez/oracle-sqldeveloper
+  volumes:
+    - /tmp/.X11-unix:/tmp/.X11-unix
+  volumes_from:
+    - data
+  links:
+    - oracle
+  env_file:
+    - ./common.env
+    - ./sqldeveloper.env
+  command: java -version
